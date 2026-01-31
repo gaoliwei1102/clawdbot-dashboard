@@ -10,12 +10,14 @@ import { useAuth } from "./hooks/useAuth";
 import { LoginDialog } from "./components/ui/LoginDialog";
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { status, isPasswordMode, hasPassword, isLoading } = useAuth();
+  const { status, isPasswordMode, isLoading } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
     if (isPasswordMode && status === "unauthenticated" && !isLoading) {
       setShowLogin(true);
+    } else if (status === "authenticated") {
+      setShowLogin(false);
     }
   }, [isPasswordMode, status, isLoading]);
 
