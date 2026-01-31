@@ -10,7 +10,7 @@ import { useAuth } from "./hooks/useAuth";
 import { LoginDialog } from "./components/ui/LoginDialog";
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { status, isPasswordMode, savedPassword, isLoading } = useAuth();
+  const { status, isPasswordMode, hasPassword, isLoading } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {

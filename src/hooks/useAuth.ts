@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getGatewayEnv } from "../lib/env";
 
 type AuthStatus = "idle" | "authenticated" | "unauthenticated" | "error";
@@ -6,26 +6,32 @@ type AuthStatus = "idle" | "authenticated" | "unauthenticated" | "error";
 export function useAuth() {
   const [status, setStatus] = useState<AuthStatus>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [password, setPassword] = useState<string | null>(null);
 
   const { authMode, baseUrl, sessionKey } = getGatewayEnv();
   const isPasswordMode = authMode === "password";
 
-  // Check auth on mount and when password changes
+  // Check auth on mount
   useEffect(() => {
-    if (!isPasswordMode) {
-      setStatus("authenticated");
-      return;
-    }
+    const checkAuth = async () => {
+      if (!isPasswordMode) {
+        setStatus("authenticated");
+        setIsLoading(false);
+        return;
+      }
 
-    // Verify password if we have one in memory
-    if (password) {
-      verifyPassword(password);
-    } else {
-      setStatus("unauthenticated");
-    }
-  }, [isPasswordMode, password]);
+      // Verify password if we have one in memory
+      if (password) {
+        await verifyPassword(password);
+      } else {
+        setStatus("unauthenticated");
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [isPasswordMode]);
 
   const verifyPassword = useCallback(async (pwd: string) => {
     setIsLoading(true);
