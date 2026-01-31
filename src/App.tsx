@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Header } from "./components/layout/Header";
 import { Sidebar } from "./components/layout/Sidebar";
@@ -6,20 +5,11 @@ import { ChannelsPage } from "./components/pages/Channels";
 import { DashboardPage } from "./components/pages/Dashboard";
 import { SessionsPage } from "./components/pages/Sessions";
 import { RefreshProvider } from "./lib/refresh";
-import { useAuth } from "./hooks/useAuth";
+import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { LoginDialog } from "./components/ui/LoginDialog";
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { status, isPasswordMode, isLoading } = useAuth();
-  const [showLogin, setShowLogin] = useState(false);
-
-  useEffect(() => {
-    if (isPasswordMode && status === "unauthenticated" && !isLoading) {
-      setShowLogin(true);
-    } else if (status === "authenticated") {
-      setShowLogin(false);
-    }
-  }, [isPasswordMode, status, isLoading]);
 
   // Don't render anything while checking auth
   if (isLoading) {
@@ -30,10 +20,15 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
+  if (isPasswordMode && status !== "authenticated") {
+    // Important: don't render children before auth, otherwise pages will fire unauthenticated
+    // Gateway requests and show confusing "CORS/URL/token" errors.
+    return <LoginDialog />;
+  }
+
   return (
     <>
       {children}
-      {showLogin && <LoginDialog onSuccess={() => setShowLogin(false)} />}
     </>
   );
 }
@@ -45,25 +40,27 @@ export default function App() {
         <Sidebar />
         <div className="flex min-w-0 flex-1 flex-col">
           <RefreshProvider>
-            <AuthGuard>
-              <Header />
-              <main className="min-w-0 flex-1 px-4 pb-10 pt-4 sm:px-6">
-                <Routes>
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/dashboard" element={<DashboardPage />} />
-                  <Route path="/sessions" element={<SessionsPage />} />
-                  <Route path="/channels" element={<ChannelsPage />} />
-                  <Route
-                    path="*"
-                    element={
-                      <div className="p-pretty rounded-xl border border-zinc-800 bg-zinc-950/60 p-6 text-sm text-zinc-200">
-                        Not Found
-                      </div>
-                    }
-                  />
-                </Routes>
-              </main>
-            </AuthGuard>
+            <AuthProvider>
+              <AuthGuard>
+                <Header />
+                <main className="min-w-0 flex-1 px-4 pb-10 pt-4 sm:px-6">
+                  <Routes>
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route path="/sessions" element={<SessionsPage />} />
+                    <Route path="/channels" element={<ChannelsPage />} />
+                    <Route
+                      path="*"
+                      element={
+                        <div className="p-pretty rounded-xl border border-zinc-800 bg-zinc-950/60 p-6 text-sm text-zinc-200">
+                          Not Found
+                        </div>
+                      }
+                    />
+                  </Routes>
+                </main>
+              </AuthGuard>
+            </AuthProvider>
           </RefreshProvider>
         </div>
       </div>

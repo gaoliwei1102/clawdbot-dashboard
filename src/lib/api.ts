@@ -70,6 +70,10 @@ export async function invokeTool<T>(
     // If unauthorized, clear the password
     if (res.status === 401) {
       currentPassword = null;
+      // Let the UI know we need to re-auth (password mode) or token is invalid.
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("gateway:unauthorized"));
+      }
     }
     throw new GatewayError(`[Gateway] ${tool} failed (${res.status})`, {
       status: res.status,

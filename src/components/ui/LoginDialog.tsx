@@ -15,8 +15,11 @@ export function LoginDialog({ onSuccess }: LoginDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(password);
-    onSuccess?.();
+    const ok = await login(password);
+    if (ok) {
+      onSuccess?.();
+      setPassword("");
+    }
   };
 
   return (
