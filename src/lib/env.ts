@@ -1,6 +1,7 @@
 export type GatewayEnv = {
   baseUrl: string;
-  token: string;
+  authMode: "password" | "token";
+  credentials: string; // password or token
   sessionKey: string;
 };
 
@@ -14,11 +15,19 @@ function readRequired(name: keyof ImportMetaEnv): string {
   return v;
 }
 
+function readOptional(name: keyof ImportMetaEnv): string | undefined {
+  return import.meta.env[name];
+}
+
 export function getGatewayEnv(): GatewayEnv {
+  const authMode = (readOptional("VITE_AUTH_MODE") || "token") as "password" | "token";
+
   return {
     baseUrl: readRequired("VITE_GATEWAY_URL").replace(/\/+$/, ""),
-    token: readRequired("VITE_GATEWAY_TOKEN"),
+    authMode,
+    credentials: authMode === "password"
+      ? readRequired("VITE_GATEWAY_PASSWORD")
+      : readRequired("VITE_GATEWAY_TOKEN"),
     sessionKey: import.meta.env.VITE_GATEWAY_SESSION_KEY || "main"
   };
 }
-

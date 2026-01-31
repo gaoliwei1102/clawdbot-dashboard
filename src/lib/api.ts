@@ -16,19 +16,44 @@ export class GatewayError extends Error {
   }
 }
 
+// Simple auth state shared across the app
+let currentPassword: string | null = null;
+
+export function setPassword(pwd: string) {
+  currentPassword = pwd;
+}
+
+export function clearPassword() {
+  currentPassword = null;
+}
+
 export async function invokeTool<T>(
   tool: string,
   args: Record<string, unknown> = {},
   opts?: { signal?: AbortSignal }
 ): Promise<T> {
-  const { baseUrl, token, sessionKey } = getGatewayEnv();
+  const { baseUrl, authMode, credentials, sessionKey } = getGatewayEnv();
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json"
+  };
+
+  if (authMode === "password") {
+    // Use password from memory (entered by user)
+    if (currentPassword) {
+      const auth = btoa(`admin:${currentPassword}`);
+      headers["Authorization"] = `Basic ${auth}`;
+    } else {
+      throw new GatewayError("[Gateway] Password required. Please enter your password.");
+    }
+  } else {
+    // Bearer token
+    headers["Authorization"] = `Bearer ${credentials}`;
+  }
 
   const res = await fetch(`${baseUrl}/tools/invoke`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json"
-    },
+    headers,
     body: JSON.stringify({ tool, args, sessionKey }),
     signal: opts?.signal
   });
@@ -42,13 +67,17 @@ export async function invokeTool<T>(
 
   if (!res.ok) {
     const detail = json ?? (await safeReadText(res));
+    // If unauthorized, clear the password
+    if (res.status === 401) {
+      currentPassword = null;
+    }
     throw new GatewayError(`[Gateway] ${tool} failed (${res.status})`, {
       status: res.status,
       detail
     });
   }
 
-  // Gateway commonly wraps results as { result: ... } (see skills/openclaw-skills references).
+  // Gateway commonly wraps results as { result: ... }
   if (json && "result" in json && json.result !== undefined) return json.result as T;
   return (json as unknown as T) ?? ({} as T);
 }
@@ -61,3 +90,9 @@ async function safeReadText(res: Response): Promise<string | undefined> {
   }
 }
 
+export type GatewayEnv = {
+  baseUrl: string;
+  authMode: "password" | "token";
+  credentials: string;
+  sessionKey: string;
+};
