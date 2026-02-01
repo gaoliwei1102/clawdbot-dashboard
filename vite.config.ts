@@ -1,20 +1,24 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
+import type { ProxyOptions } from "vite";
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), "");
+  // Avoid relying on Node types in the main tsconfig by not using `process`.
+  const rootDir = new URL(".", import.meta.url).pathname;
+  const env = loadEnv(mode, rootDir, "");
   const gatewayUrl = (env.VITE_GATEWAY_URL || "").trim();
 
   // If using /api as VITE_GATEWAY_URL, proxy to local Gateway (CORS workaround for dev)
   // Otherwise, use the URL directly (for Tailscale Funnel, production, etc.)
-  let proxy: Record<string, any> | undefined;
+  let proxy: Record<string, string | ProxyOptions> | undefined;
 
   if (gatewayUrl === "/api") {
     proxy = {
       "/api": {
         target: "http://127.0.0.1:18789",
         changeOrigin: true,
-        secure: false
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, "")
       }
     };
   } else if (gatewayUrl && !gatewayUrl.startsWith("/")) {
