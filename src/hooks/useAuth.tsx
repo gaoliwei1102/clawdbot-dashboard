@@ -58,11 +58,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
 
     try {
-      const auth = btoa(`admin:${pwd}`);
+      // Gateway HTTP endpoint uses Bearer token auth (password mode)
       const res = await fetch(`${baseUrl}/tools/invoke`, {
         method: "POST",
         headers: {
-          Authorization: `Basic ${auth}`,
+          Authorization: `Bearer ${pwd}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({

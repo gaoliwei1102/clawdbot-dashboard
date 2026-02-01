@@ -41,8 +41,8 @@ export async function invokeTool<T>(
   if (authMode === "password") {
     // Use password from memory (entered by user)
     if (currentPassword) {
-      const auth = btoa(`admin:${currentPassword}`);
-      headers["Authorization"] = `Basic ${auth}`;
+      // Gateway HTTP endpoint uses Bearer token auth
+      headers["Authorization"] = `Bearer ${currentPassword}`;
     } else {
       throw new GatewayError("[Gateway] Password required. Please enter your password.");
     }
