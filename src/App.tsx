@@ -7,6 +7,7 @@ import { SessionsPage } from "./components/pages/Sessions";
 import { RefreshProvider } from "./lib/refresh";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { LoginDialog } from "./components/ui/LoginDialog";
+import { Skeleton } from "./components/ui/Skeleton";
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { status, isPasswordMode, isLoading } = useAuth();
@@ -14,8 +15,15 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   // Don't render anything while checking auth
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-dvh">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+      <div className="flex min-h-dvh items-center justify-center">
+        <div className="w-[min(520px,90vw)] space-y-3 rounded-xl border border-zinc-800 bg-zinc-950/60 p-6">
+          <div className="h-balance font-display text-base text-zinc-100">连接中…</div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </div>
       </div>
     );
   }

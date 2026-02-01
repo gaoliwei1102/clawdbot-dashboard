@@ -3,12 +3,13 @@ export type Session = {
   model?: string;
   channel?: string;
   totalTokens?: number;
-  updatedAt?: string;
-  createdAt?: string;
+  updatedAt?: number | string;
+  createdAt?: number | string;
   kind?: string;
 } & Record<string, unknown>;
 
 export type SessionsListResult = {
+  count?: number;
   sessions: Session[];
 } & Record<string, unknown>;
 
@@ -18,14 +19,17 @@ export type Channel = {
   platform?: string;
   status?: string;
   connected?: boolean;
-  lastSeenAt?: string;
+  lastSeenAt?: number | string;
 } & Record<string, unknown>;
 
 export type ChannelsListResult = {
+  count?: number;
   channels: Channel[];
 } & Record<string, unknown>;
 
 export type SessionStatusResult = {
-  details?: { statusText?: string } & Record<string, unknown>;
+  ok?: boolean;
+  sessionKey?: string;
+  changedModel?: unknown;
+  statusText?: string;
 } & Record<string, unknown>;
-

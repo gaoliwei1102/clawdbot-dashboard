@@ -130,11 +130,14 @@ export function SessionsPage() {
             {loading ? <Badge variant="warn">loading…</Badge> : <Badge variant="ok">live</Badge>}
           </div>
 
-	          {error ? (
-	            <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
-	              {getErrorMessage(error)}
-	            </div>
-	          ) : null}
+          {error ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+              <div className="min-w-0 truncate">{getErrorMessage(error)}</div>
+              <Button onClick={refetch} size="sm">
+                重试
+              </Button>
+            </div>
+          ) : null}
         </CardHeader>
 
         <CardContent className="p-0">
@@ -144,6 +147,17 @@ export function SessionsPage() {
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-10 w-full" />
+              </div>
+            </div>
+          ) : error ? (
+            <div className="p-4">
+              <div className="space-y-3">
+                <div className="p-pretty text-sm text-zinc-500">
+                  sessions_list 请求失败。若返回 401，请重新登录/更新 token；若返回 404，说明当前 Gateway 未提供该工具。
+                </div>
+                <div>
+                  <Button onClick={refetch}>重试</Button>
+                </div>
               </div>
             </div>
           ) : filtered.length ? (
@@ -167,11 +181,13 @@ export function SessionsPage() {
             </div>
           ) : (
             <div className="p-4">
-              <div className="p-pretty text-sm text-zinc-500">
-                没有可显示的会话。试试清除筛选，或确认 Gateway 返回了 sessions_list 数据。
-              </div>
-              <div className="mt-3">
-                <Button onClick={refetch}>重试</Button>
+              <div className="space-y-3">
+                <div className="p-pretty text-sm text-zinc-500">
+                  没有可显示的会话。试试清除筛选，或确认 Gateway 返回了 sessions_list 数据。
+                </div>
+                <div>
+                  <Button onClick={refetch}>重试</Button>
+                </div>
               </div>
             </div>
           )}

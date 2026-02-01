@@ -112,11 +112,14 @@ export function ChannelsPage() {
               <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜索平台 / 名称 / 状态…" />
             </div>
           </div>
-	          {error ? (
-	            <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
-	              {getErrorMessage(error)}
-	            </div>
-	          ) : null}
+          {error ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+              <div className="min-w-0 truncate">{getErrorMessage(error)}</div>
+              <Button onClick={refetch} size="sm">
+                重试
+              </Button>
+            </div>
+          ) : null}
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -125,6 +128,15 @@ export function ChannelsPage() {
               <Skeleton className="h-40 w-full" />
               <Skeleton className="h-40 w-full" />
             </div>
+          ) : error ? (
+            <div className="space-y-3">
+              <div className="p-pretty text-sm text-zinc-500">
+                channels_list 请求失败。若返回 404，说明当前 Gateway 未提供该工具（常见于 plugin 未启用）。
+              </div>
+              <div>
+                <Button onClick={refetch}>重试</Button>
+              </div>
+            </div>
           ) : filtered.length ? (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((ch, idx) => (
@@ -132,8 +144,13 @@ export function ChannelsPage() {
               ))}
             </div>
           ) : (
-            <div className="p-pretty text-sm text-zinc-500">
-              channels_list 返回空。请确认 Gateway 已启用通道提供方（WhatsApp/Discord/Telegram/Slack…）。
+            <div className="space-y-3">
+              <div className="p-pretty text-sm text-zinc-500">
+                channels_list 返回空。请确认 Gateway 已启用通道提供方（WhatsApp/Discord/Telegram/Slack…）。
+              </div>
+              <div>
+                <Button onClick={refetch}>重试</Button>
+              </div>
             </div>
           )}
         </CardContent>

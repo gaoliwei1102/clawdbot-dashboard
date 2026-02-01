@@ -1,6 +1,7 @@
 import { getGatewayEnv } from "./env";
 
 export type GatewayToolInvokeResponse<T> = {
+  ok?: boolean;
   result?: T;
 } & Record<string, unknown>;
 
@@ -81,8 +82,14 @@ export async function invokeTool<T>(
     });
   }
 
-  // Gateway commonly wraps results as { result: ... }
-  if (json && "result" in json && json.result !== undefined) return json.result as T;
+  // Gateway wraps results as { ok: true, result: ... }.
+  // Many clawdbot tools return a "ToolResult" shape: { content: [...], details: <payload> }.
+  // For dashboard usage we want the payload, so prefer unwrapping `result.details` when present.
+  const rawResult =
+    json && typeof json === "object" && "result" in json ? (json as GatewayToolInvokeResponse<unknown>).result : json;
+  const unwrapped = unwrapToolDetails(rawResult);
+  if (unwrapped !== undefined) return unwrapped as T;
+  if (rawResult !== undefined) return rawResult as T;
   return (json as unknown as T) ?? ({} as T);
 }
 
@@ -92,6 +99,14 @@ async function safeReadText(res: Response): Promise<string | undefined> {
   } catch {
     return undefined;
   }
+}
+
+function unwrapToolDetails(value: unknown): unknown | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  // Prefer `details` only when it is explicitly present, otherwise keep the raw result.
+  if (!("details" in value)) return undefined;
+  const details = (value as { details?: unknown }).details;
+  return details === undefined ? undefined : details;
 }
 
 export type GatewayEnv = {

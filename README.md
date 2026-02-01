@@ -20,7 +20,8 @@ cp .env.example .env
 
 至少需要：
 - `VITE_GATEWAY_URL`
-- `VITE_GATEWAY_TOKEN`
+- `VITE_AUTH_MODE`（`password` 或 `token`）
+- `VITE_GATEWAY_TOKEN`（当 `VITE_AUTH_MODE=token` 时需要）
 
 3) 安装依赖并启动（需要联网拉取 npm 包）
 
@@ -35,7 +36,7 @@ npm run dev
 
 默认调用：
 - `POST {VITE_GATEWAY_URL}/tools/invoke`
-- Header：`Authorization: Bearer ${VITE_GATEWAY_TOKEN}`
+- Header：`Authorization: Bearer <token-or-password>`
 - Body（JSON）：
 
 ```json
@@ -46,13 +47,13 @@ npm run dev
 }
 ```
 
-常见返回会包装为：
+常见返回会包装为（clawdbot gateway）：
 
 ```json
-{ "result": { "sessions": [] } }
+{ "ok": true, "result": { "content": [], "details": { "sessions": [] } } }
 ```
 
-本项目会自动优先读取 `result` 字段（见 `src/lib/api.ts`）。
+本项目会自动优先读取 `result.details`（见 `src/lib/api.ts`），否则会出现数据为空的情况。
 
 ## CORS / 本地开发代理
 
@@ -79,4 +80,3 @@ npm run dev
 ## 安全提示
 
 `VITE_GATEWAY_TOKEN` 会注入到前端构建产物中并在浏览器端发送请求（这是 Vite 的机制）。请在可信环境使用，并考虑在生产环境通过后端代理/短期 token/权限隔离降低风险。
-

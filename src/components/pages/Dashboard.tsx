@@ -49,6 +49,9 @@ export function DashboardPage() {
     void refetch();
   }, [tick, refetch]);
 
+  const sessionsAvailable = data.sessions !== null;
+  const channelsAvailable = data.channels !== null;
+
   const sessions = data.sessions?.sessions ?? [];
   const channels = data.channels?.channels ?? [];
 
@@ -73,7 +76,13 @@ export function DashboardPage() {
     return Array.from(map.entries()).map(([platform, count]) => ({ platform, count }));
   }, [channels]);
 
-  const statusText = data.status?.details?.statusText;
+  const statusText = data.status?.statusText;
+  const warnings = React.useMemo(() => {
+    const entries = Object.entries(data.errors ?? {}).filter(([, v]) => v !== undefined) as Array<
+      [string, unknown]
+    >;
+    return entries;
+  }, [data.errors]);
 
   return (
     <div className="space-y-4">
@@ -110,6 +119,33 @@ export function DashboardPage() {
         </Card>
       ) : null}
 
+      {!error && warnings.length ? (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardHeader>
+            <CardTitle>部分工具不可用</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="p-pretty text-sm text-amber-200">
+              以下调用失败（其余数据仍会渲染）。常见原因：tool 不存在（404）、权限不足（401）、或 CORS/网络错误。
+            </div>
+            <div className="space-y-2">
+              {warnings.map(([name, err]) => (
+                <div
+                  key={name}
+                  className="rounded-md border border-amber-500/20 bg-zinc-950/60 p-3 text-xs text-zinc-200"
+                >
+                  <div className="font-medium text-zinc-100">{name}</div>
+                  <div className="mt-1 text-zinc-300">{getErrorMessage(err)}</div>
+                </div>
+              ))}
+            </div>
+            <div>
+              <Button onClick={refetch}>重试</Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <div className="grid gap-3 md:grid-cols-4">
         <Card>
           <CardHeader>
@@ -118,6 +154,11 @@ export function DashboardPage() {
           <CardContent>
             {loading ? (
               <Skeleton className="h-8 w-24" />
+            ) : !sessionsAvailable ? (
+              <div className="flex items-center gap-2">
+                <div className="text-2xl font-semibold tabular-nums">—</div>
+                <Badge variant="neutral">unavailable</Badge>
+              </div>
             ) : (
               <div className="text-2xl font-semibold tabular-nums">{sessions.length}</div>
             )}
@@ -144,6 +185,11 @@ export function DashboardPage() {
           <CardContent>
             {loading ? (
               <Skeleton className="h-8 w-24" />
+            ) : !channelsAvailable ? (
+              <div className="flex items-center gap-2">
+                <div className="text-2xl font-semibold tabular-nums">—</div>
+                <Badge variant="neutral">unavailable</Badge>
+              </div>
             ) : (
               <div className="flex items-center gap-2">
                 <div className="text-2xl font-semibold tabular-nums">{channels.length}</div>
@@ -167,7 +213,17 @@ export function DashboardPage() {
             {loading ? (
               <Skeleton className="h-8 w-full" />
             ) : statusText ? (
-              <div className="p-pretty text-sm text-zinc-200">{statusText}</div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="truncate text-xs text-zinc-500">
+                    {data.status?.sessionKey ? `session: ${data.status.sessionKey}` : "session_status"}
+                  </div>
+                  <Badge variant="ok">live</Badge>
+                </div>
+                <pre className="max-h-48 overflow-auto rounded-md border border-zinc-800 bg-zinc-950/70 p-3 text-xs leading-relaxed text-zinc-200 whitespace-pre-wrap">
+                  {statusText}
+                </pre>
+              </div>
             ) : (
               <div className="p-pretty text-sm text-zinc-500">session_status unavailable</div>
             )}
@@ -186,6 +242,15 @@ export function DashboardPage() {
               <div className="space-y-2">
                 <Skeleton className="h-4 w-2/3" />
                 <Skeleton className="h-32 w-full" />
+              </div>
+            ) : !sessionsAvailable ? (
+              <div className="space-y-3">
+                <div className="p-pretty text-sm text-zinc-500">
+                  sessions_list 不可用（或请求失败）。请先修复鉴权 / 网络 / CORS，再重试。
+                </div>
+                <div>
+                  <Button onClick={refetch}>重试</Button>
+                </div>
               </div>
             ) : topSessions.length ? (
               <div className="h-72">
@@ -207,8 +272,13 @@ export function DashboardPage() {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="p-pretty text-sm text-zinc-500">
-                sessions_list 返回空。请确认 Gateway 正在运行且 token 有权限。
+              <div className="space-y-3">
+                <div className="p-pretty text-sm text-zinc-500">
+                  sessions_list 返回空。请确认 Gateway 正在运行，且当前账号/策略允许列出 session。
+                </div>
+                <div>
+                  <Button onClick={refetch}>重试</Button>
+                </div>
               </div>
             )}
           </CardContent>
@@ -223,6 +293,15 @@ export function DashboardPage() {
               <div className="space-y-2">
                 <Skeleton className="h-4 w-2/3" />
                 <Skeleton className="h-32 w-full" />
+              </div>
+            ) : !channelsAvailable ? (
+              <div className="space-y-3">
+                <div className="p-pretty text-sm text-zinc-500">
+                  channels_list 不可用（常见于 Gateway 未安装/启用对应 plugin）。你仍可以使用 Sessions 页面。
+                </div>
+                <div>
+                  <Button onClick={refetch}>重试</Button>
+                </div>
               </div>
             ) : channelsByPlatform.length ? (
               <div className="grid gap-4 lg:grid-cols-5">
@@ -267,8 +346,13 @@ export function DashboardPage() {
                 </div>
               </div>
             ) : (
-              <div className="p-pretty text-sm text-zinc-500">
-                channels_list 返回空。请确认 Gateway 已配置 WhatsApp/Discord/Telegram/Slack 等通道。
+              <div className="space-y-3">
+                <div className="p-pretty text-sm text-zinc-500">
+                  channels_list 返回空。请确认 Gateway 已配置 WhatsApp/Discord/Telegram/Slack 等通道。
+                </div>
+                <div>
+                  <Button onClick={refetch}>重试</Button>
+                </div>
               </div>
             )}
           </CardContent>

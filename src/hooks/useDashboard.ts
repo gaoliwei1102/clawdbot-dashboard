@@ -7,6 +7,7 @@ export type DashboardData = {
   sessions: SessionsListResult | null;
   channels: ChannelsListResult | null;
   status: SessionStatusResult | null;
+  errors: Partial<Record<"sessions_list" | "channels_list" | "session_status", unknown>>;
 };
 
 export function useDashboard(opts?: { pollMs?: number }) {
@@ -21,6 +22,11 @@ export function useDashboard(opts?: { pollMs?: number }) {
     const sessions = sessionsRes.status === "fulfilled" ? sessionsRes.value : null;
     const channels = channelsRes.status === "fulfilled" ? channelsRes.value : null;
     const status = statusRes.status === "fulfilled" ? statusRes.value : null;
+    const errors: DashboardData["errors"] = {
+      ...(sessionsRes.status === "rejected" ? { sessions_list: sessionsRes.reason } : null),
+      ...(channelsRes.status === "rejected" ? { channels_list: channelsRes.reason } : null),
+      ...(statusRes.status === "rejected" ? { session_status: statusRes.reason } : null)
+    };
 
     // If both core calls fail, surface an error (no mock fallback).
     if (!sessions && !channels) {
@@ -33,13 +39,13 @@ export function useDashboard(opts?: { pollMs?: number }) {
       throw reason;
     }
 
-    return { sessions, channels, status };
+    return { sessions, channels, status, errors };
   }, []);
 
   const { data, loading, error, refetch } = usePollingResource(fetcher, { pollMs: opts?.pollMs });
 
   return {
-    data: data ?? { sessions: null, channels: null, status: null },
+    data: data ?? { sessions: null, channels: null, status: null, errors: {} },
     loading,
     error,
     refetch
