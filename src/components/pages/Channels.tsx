@@ -131,7 +131,10 @@ export function ChannelsPage() {
           ) : error ? (
             <div className="space-y-3">
               <div className="p-pretty text-sm text-zinc-500">
-                channels_list 请求失败。若返回 404，说明当前 Gateway 未提供该工具（常见于 plugin 未启用）。
+                channels_list 请求失败（404 说明工具不可用，通常是因为 Gateway 未安装对应 plugin）。
+                <br />
+                你仍可以查看 <a href="/sessions" className="text-emerald-400 hover:underline">Sessions 页面</a>
+                。
               </div>
               <div>
                 <Button onClick={refetch}>重试</Button>
