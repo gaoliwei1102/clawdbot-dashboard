@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useRefresh } from "../../lib/refresh";
+import { getErrorMessage } from "../../lib/error";
 import type { Channel } from "../../lib/types";
 import { useChannels } from "../../hooks/useChannels";
 import { Badge, type BadgeVariant } from "../ui/Badge";
@@ -111,11 +112,11 @@ export function ChannelsPage() {
               <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜索平台 / 名称 / 状态…" />
             </div>
           </div>
-          {error ? (
-            <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
-              {String((error as Error)?.message || error)}
-            </div>
-          ) : null}
+	          {error ? (
+	            <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+	              {getErrorMessage(error)}
+	            </div>
+	          ) : null}
         </CardHeader>
         <CardContent>
           {loading ? (

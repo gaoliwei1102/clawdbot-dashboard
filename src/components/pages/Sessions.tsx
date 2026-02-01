@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useRefresh } from "../../lib/refresh";
+import { getErrorMessage } from "../../lib/error";
 import type { Session } from "../../lib/types";
 import { useSessions } from "../../hooks/useSessions";
 import { Badge } from "../ui/Badge";
@@ -129,11 +130,11 @@ export function SessionsPage() {
             {loading ? <Badge variant="warn">loading…</Badge> : <Badge variant="ok">live</Badge>}
           </div>
 
-          {error ? (
-            <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
-              {String((error as Error)?.message || error)}
-            </div>
-          ) : null}
+	          {error ? (
+	            <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+	              {getErrorMessage(error)}
+	            </div>
+	          ) : null}
         </CardHeader>
 
         <CardContent className="p-0">

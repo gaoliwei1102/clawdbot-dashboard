@@ -13,6 +13,7 @@ import {
 import { useRefresh } from "../../lib/refresh";
 import type { Channel, Session } from "../../lib/types";
 import { useDashboard } from "../../hooks/useDashboard";
+import { getErrorMessage } from "../../lib/error";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
@@ -99,9 +100,9 @@ export function DashboardPage() {
             <div className="p-pretty text-sm text-red-200">
               请检查 `VITE_GATEWAY_URL` / `VITE_GATEWAY_TOKEN`，以及 Gateway 是否允许浏览器跨域访问。
             </div>
-            <div className="rounded-md border border-red-500/20 bg-zinc-950/60 p-3 text-xs text-zinc-200">
-              {String((error as Error)?.message || error)}
-            </div>
+	            <div className="rounded-md border border-red-500/20 bg-zinc-950/60 p-3 text-xs text-zinc-200">
+	              {getErrorMessage(error)}
+	            </div>
             <div>
               <Button onClick={refetch}>重试</Button>
             </div>
@@ -276,4 +277,3 @@ export function DashboardPage() {
     </div>
   );
 }
-
